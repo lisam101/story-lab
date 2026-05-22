@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Story Lab">
+  <title>Story Lab</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d1b2e 100%);
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: white;
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 24px 0 30px;
+    }
+    .header-icon { font-size: 44px; line-height: 1; }
+    .header h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, #c4b5fd, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 5px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 22px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 14px;
+    }
+
+    /* ── Character chips ── */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .chip {
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 100px;
+      padding: 9px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .chip.selected {
+      background: rgba(124,58,237,0.4);
+      border-color: #7c3aed;
+    }
+    .chip:active { transform: scale(0.95); }
+
+    /* ── Text input ── */
+    .text-input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 13px 15px;
+      font-size: 16px;
+      color: white;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .text-input:focus { border-color: rgba(124,58,237,0.7); }
+    .text-input::placeholder { color: rgba(255,255,255,0.25); }
+
+    /* ── Voice grid ── */
+    .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .voice-btn {
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      padding: 16px 10px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .voice-btn .v-emoji { font-size: 30px; display: block; margin-bottom: 6px; }
+    .voice-btn .v-name { font-size: 15px; font-weight: 700; }
+    .voice-btn .v-sub { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .voice-btn.selected {
+      background: rgba(124,58,237,0.25);
+      border-color: #7c3aed;
+    }
+    .voice-btn:active { transform: scale(0.96); }
+
+    /* ── Generate button ── */
+    .btn-generate {
+      width: 100%;
+      background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+      border: none;
+      border-radius: 20px;
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: -0.3px;
+      margin-top: 4px;
+      box-shadow: 0 8px 32px rgba(109,40,217,0.45);
+    }
+    .btn-generate:active { transform: scale(0.98); box-shadow: 0 4px 16px rgba(109,40,217,0.3); }
+    .btn-generate:disabled { opacity: 0.45; transform: none; box-shadow: none; cursor: not-allowed; }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 14px;
+      color: #fca5a5;
+      margin-top: 12px;
+      display: none;
+    }
+    .error-box.show { display: block; }
+
+    /* ── Loading ── */
+    .loading-box {
+      text-align: center;
+      padding: 36px 0 28px;
+      display: none;
+    }
+    .loading-box.show { display: block; }
+    .spinner {
+      width: 46px; height: 46px;
+      border: 3px solid rgba(255,255,255,0.12);
+      border-top-color: #8b5cf6;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-msg { font-size: 15px; color: rgba(255,255,255,0.5); }
+    .loading-sub { font-size: 13px; color: rgba(255,255,255,0.28); margin-top: 5px; }
+
+    /* ── Story section ── */
+    .story-card { display: none; }
+    .story-card.show { display: block; }
+
+    .story-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .story-header .star { font-size: 22px; }
+    .story-header h2 { font-size: 17px; font-weight: 700; color: #c4b5fd; }
+
+    .story-body {
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.75);
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .story-body::-webkit-scrollbar { width: 3px; }
+    .story-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+    /* ── Action buttons ── */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .btn-play {
+      flex: 1;
+      background: linear-gradient(135deg, #065f46, #059669);
+      border: none;
+      border-radius: 16px;
+      padding: 18px 12px;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 24px rgba(5,150,105,0.35);
+    }
+    .btn-play:active { transform: scale(0.97); }
+    .btn-play:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-reset {
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 18px 18px;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:active { transform: scale(0.97); }
+
+    /* ── Progress bar ── */
+    .progress-wrap { margin-top: 14px; display: none; }
+    .progress-wrap.show { display: block; }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6d28d9, #8b5cf6);
+      border-radius: 4px;
+      transition: width 0.4s linear;
+      width: 0%;
+    }
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ── Stars decoration ── */
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star-dot {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      opacity: 0;
+      animation: twinkle var(--d) ease-in-out infinite var(--delay);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: var(--op); }
+    }
+
+    .app { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+
+<!-- Twinkling stars background -->
+<div class="stars" id="stars"></div>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">🌙</div>
+    <h1>Story Lab</h1>
+    <p>Bedtime stories in your family's voices</p>
+  </div>
+
+  <!-- Character card -->
+  <div class="card" id="form-section">
+    <div class="card-label">Tonight's Story Is About…</div>
+    <div class="chips" id="chips">
+      <div class="chip" data-val="Baby Blue Dinosaur" onclick="pickChip(this)">🦕 Baby Blue Dino</div>
+      <div class="chip" data-val="Captain Enzo" onclick="pickChip(this)">🚀 Captain Enzo</div>
+      <div class="chip" data-val="Magic Train" onclick="pickChip(this)">🚂 Magic Train</div>
+      <div class="chip" data-val="Sleepy Cloud named Nimbus" onclick="pickChip(this)">☁️ Sleepy Cloud</div>
+      <div class="chip" data-val="a friendly dragon" onclick="pickChip(this)">🐉 Friendly Dragon</div>
+    </div>
+    <input
+      type="text"
+      class="text-input"
+      id="custom-input"
+      placeholder="Or type your own idea…"
+      oninput="clearChips()"
+    >
+  </div>
+
+  <!-- Voice card -->
+  <div class="card">
+    <div class="card-label">Read By</div>
+    <div class="voice-grid">
+      <div class="voice-btn" data-voice="mom" onclick="pickVoice(this)">
+        <span class="v-emoji">👩</span>
+        <div class="v-name">Mom</div>
+        <div class="v-sub">Your voice</div>
+      </div>
+      <div class="voice-btn" data-voice="dad" onclick="pickVoice(this)">
+        <span class="v-emoji">👨</span>
+        <div class="v-name">Dad</div>
+        <div class="v-sub">Daddy's voice</div>
+      </div>
+      <div class="voice-btn" data-voice="grandma" onclick="pickVoice(this)">
+        <span class="v-emoji">👵</span>
+        <div class="v-name">Grandma</div>
+        <div class="v-sub">Grandma's voice</div>
+      </div>
+      <div class="voice-btn" data-voice="grandpa" onclick="pickVoice(this)">
+        <span class="v-emoji">👴</span>
+        <div class="v-name">Grandpa</div>
+        <div class="v-sub">Grandpa's voice</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate button -->
+  <button class="btn-generate" id="btn-gen" onclick="generate()">
+    ✨ Create Tonight's Story
+  </button>
+
+  <!-- Error -->
+  <div class="error-box" id="err"></div>
+
+  <!-- Loading -->
+  <div class="loading-box" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-msg" id="loading-msg">Writing your story…</div>
+    <div class="loading-sub" id="loading-sub">This takes about 10 seconds</div>
+  </div>
+
+  <!-- Story output -->
+  <div class="card story-card" id="story-card" style="margin-top:14px;">
+    <div class="story-header">
+      <span class="star">✨</span>
+      <h2 id="story-title">Tonight's Story</h2>
+    </div>
+    <div class="story-body" id="story-body"></div>
+    <div class="action-row">
+      <button class="btn-play" id="btn-play" onclick="handlePlay()">🔊 Read to Me</button>
+      <button class="btn-reset" onclick="reset()" title="Start over">↩</button>
+    </div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar" id="progress-bar" onclick="seek(event)">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="t-cur">0:00</span>
+        <span id="t-tot">—</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<audio id="player"></audio>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let selectedVoice = null;
+  let currentStory  = '';
+  let audioUrl      = null;
+  let playing       = false;
+
+  // ── Stars background ───────────────────────────────────
+  (function () {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 60; i++) {
+      const d = document.createElement('div');
+      d.className = 'star-dot';
+      const size = Math.random() * 2.5 + 0.5;
+      d.style.cssText = `
+        width:${size}px; height:${size}px;
+        top:${Math.random()*100}%; left:${Math.random()*100}%;
+        --d:${(Math.random()*4+2).toFixed(1)}s;
+        --delay:-${(Math.random()*6).toFixed(1)}s;
+        --op:${(Math.random()*0.6+0.2).toFixed(2)};
+      `;
+      container.appendChild(d);
+    }
+  })();
+
+  // ── UI helpers ─────────────────────────────────────────
+  function pickChip(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('custom-input').value = '';
+  }
+  function clearChips() {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  }
+  function pickVoice(el) {
+    document.querySelectorAll('.voice-btn').forEach(v => v.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedVoice = el.dataset.voice;
+  }
+  function getTheme() {
+    const chip = document.querySelector('.chip.selected');
+    if (chip) return chip.dataset.val;
+    return document.getElementById('custom-input').value.trim();
+  }
+  function showErr(msg) {
+    const el = document.getElementById('err');
+    el.textContent = msg; el.classList.add('show');
+  }
+  function hideErr() { document.getElementById('err').classList.remove('show'); }
+  function fmtTime(s) {
+    const m = Math.floor(s / 60);
+    return `${m}:${Math.floor(s % 60).toString().padStart(2,'0')}`;
+  }
+
+  // ── Generate story ─────────────────────────────────────
+  async function generate() {
+    const theme = getTheme();
+    if (!theme)         { showErr('Please choose a character or type a story idea.'); return; }
+    if (!selectedVoice) { showErr('Please choose whose voice should read the story.'); return; }
+    hideErr();
+
+    // Reset audio state
+    const player = document.getElementById('player');
+    player.pause(); player.src = '';
+    audioUrl = null; playing = false;
+
+    document.getElementById('story-card').classList.remove('show');
+    document.getElementById('progress-wrap').classList.remove('show');
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('loading-msg').textContent = 'Writing your story…';
+    document.getElementById('loading-sub').textContent = 'This takes about 10 seconds';
+    document.getElementById('btn-gen').disabled = true;
+
+    try {
+      const res = await fetch('/.netlify/functions/generate-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Story generation failed');
+
+      currentStory = data.story;
+      document.getElementById('story-body').textContent = currentStory;
+      document.getElementById('story-title').textContent = data.title || `${theme} Story`;
+      document.getElementById('btn-play').textContent = '🔊 Read to Me';
+      document.getElementById('btn-play').disabled = false;
+
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('story-card').classList.add('show');
+      document.getElementById('btn-gen').disabled = false;
+      document.getElementById('story-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('btn-gen').disabled = false;
+      showErr('Something went wrong: ' + e.message + '. Please try again.');
+    }
+  }
+
+  // ── Play / pause ───────────────────────────────────────
+  async function handlePlay() {
+    const player = document.getElementById('player');
+
+    if (playing) {
+      player.pause();
+      playing = false;
+      document.getElementById('btn-play').textContent = '▶️ Resume';
+      return;
+    }
+
+    if (audioUrl) {
+      player.play();
+      playing = true;
+      document.getElementById('btn-play').textContent = '⏸ Pause';
+      return;
+    }
+
+    // Generate audio for the first time
+    document.getElementById('btn-play').disabled = true;
+    document.getElementById('loading-msg').textContent = 'Preparing the audio…';
+    document.getElementById('loading-sub').textContent = 'Rendering in the selected voice';
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('story-card').style.opacity = '0.5';
+
+    try {
+      const res = await fetch('/.netlify/functions/generate-audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: currentStory, voice: selectedVoice })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Audio generation failed');
+
+      // Decode base64 → blob → object URL
+      const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'audio/mpeg' });
+      audioUrl = URL.createObjectURL(blob);
+
+      player.src = audioUrl;
+
+      player.ontimeupdate = () => {
+        if (!player.duration) return;
+        const pct = (player.currentTime / player.duration) * 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('t-cur').textContent = fmtTime(player.currentTime);
+        document.getElementById('t-tot').textContent  = fmtTime(player.duration);
+      };
+      player.onended = () => {
+        playing = false;
+        document.getElementById('btn-play').textContent = '🔊 Play Again';
+        audioUrl = null;
+      };
+
+      player.play();
+      playing = true;
+
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('story-card').style.opacity = '1';
+      document.getElementById('btn-play').textContent = '⏸ Pause';
+      document.getElementById('btn-play').disabled = false;
+      document.getElementById('progress-wrap').classList.add('show');
+    } catch (e) {
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('story-card').style.opacity = '1';
+      document.getElementById('btn-play').textContent = '🔊 Read to Me';
+      document.getElementById('btn-play').disabled = false;
+      showErr('Audio error: ' + e.message);
+    }
+  }
+
+  // ── Seek ───────────────────────────────────────────────
+  function seek(e) {
+    const player = document.getElementById('player');
+    if (!player.duration) return;
+    const bar = document.getElementById('progress-bar');
+    const pct = e.offsetX / bar.clientWidth;
+    player.currentTime = pct * player.duration;
+  }
+
+  // ── Reset ──────────────────────────────────────────────
+  function reset() {
+    const player = document.getElementById('player');
+    player.pause(); player.src = '';
+    audioUrl = null; playing = false; currentStory = '';
+    document.getElementById('story-card').classList.remove('show');
+    document.getElementById('progress-wrap').classList.remove('show');
+    document.getElementById('progress-fill').style.width = '0%';
+    hideErr();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
