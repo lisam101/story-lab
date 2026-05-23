@@ -52,7 +52,7 @@ exports.handler = async (event) => {
       console.error('ElevenLabs error:', errText);
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: 'Audio generation failed. Check your ELEVENLABS_API_KEY and voice IDs.' })
+        body: JSON.stringify({ error: `ElevenLabs ${response.status}: ${errText}` })
       };
     }
 
