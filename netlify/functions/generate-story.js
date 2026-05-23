@@ -50,7 +50,10 @@ Also respond with a short title (3–6 words) for the story in this exact JSON f
       };
     }
 
-    const raw = data.content[0].text.trim();
+    let raw = data.content[0].text.trim();
+
+    // Strip markdown code fences if Claude wraps the JSON in ```json ... ```
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
     // Try to parse JSON response; fall back gracefully
     try {
