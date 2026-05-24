@@ -3,7 +3,7 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const { theme } = JSON.parse(event.body || '{}');
+  const { theme, lesson } = JSON.parse(event.body || '{}');
   const childName = process.env.CHILD_NAME || 'Enzo';
 
   if (!theme) {
@@ -12,7 +12,7 @@ exports.handler = async (event) => {
 
   const prompt = `You are a warm, imaginative children's storyteller. Write a soothing bedtime story for a 4-year-old boy named ${childName}.
 
-Tonight's theme or character: ${theme}
+Tonight's theme or character: ${theme}${lesson ? `\nStory lesson to weave in naturally (don't state it explicitly): ${lesson}` : ''}
 
 Requirements:
 - Exactly 600–650 words

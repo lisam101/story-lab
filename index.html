@@ -311,6 +311,21 @@
     >
   </div>
 
+  <!-- Theme card -->
+  <div class="card">
+    <div class="card-label">Story Theme <span style="font-weight:400;color:rgba(255,255,255,0.25);text-transform:none;letter-spacing:0;">— optional</span></div>
+    <div class="chips" id="theme-chips">
+      <div class="chip" data-val="Sharing" onclick="pickTheme(this)">🤝 Sharing</div>
+      <div class="chip" data-val="Trying Something New" onclick="pickTheme(this)">🌟 Trying Something New</div>
+      <div class="chip" data-val="Adventure" onclick="pickTheme(this)">🗺️ Adventure</div>
+      <div class="chip" data-val="Problem-Solving" onclick="pickTheme(this)">🧩 Problem-Solving</div>
+      <div class="chip" data-val="Kindness" onclick="pickTheme(this)">💛 Kindness</div>
+      <div class="chip" data-val="Dealing with Disappointment" onclick="pickTheme(this)">🌈 Disappointment</div>
+      <div class="chip" data-val="Being Brave" onclick="pickTheme(this)">🦁 Being Brave</div>
+      <div class="chip" data-val="No Hitting" onclick="pickTheme(this)">✋ No Hitting</div>
+    </div>
+  </div>
+
   <!-- Voice card -->
   <div class="card">
     <div class="card-label">Read By</div>
@@ -381,10 +396,74 @@
 
 <script>
   // ── State ──────────────────────────────────────────────
-  let selectedVoice = null;
-  let currentStory  = '';
-  let audioUrl      = null;
-  let playing       = false;
+  let selectedVoice  = null;
+  let selectedLesson = null;
+  let currentStory   = '';
+  let audioUrl       = null;
+  let playing        = false;
+
+  // ── Ambient music (Web Audio) ──────────────────────────
+  const Music = (() => {
+    let ctx = null, masterGain = null;
+    const TARGET = 0.20;
+    const FADE   = 2.5;
+
+    // A-major pentatonic: A2 E3 A3 C#4 E4 A4
+    const notes = [
+      { freq: 110.00, gain: 0.14 },
+      { freq: 164.81, gain: 0.11 },
+      { freq: 220.00, gain: 0.09 },
+      { freq: 277.18, gain: 0.07 },
+      { freq: 329.63, gain: 0.06 },
+      { freq: 440.00, gain: 0.04 },
+    ];
+
+    function init() {
+      if (ctx) return;
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = 0;
+      masterGain.connect(ctx.destination);
+
+      // Slow tremolo LFO (0.08 Hz)
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.value = 0.08;
+      lfoGain.gain.value  = 0.012;
+      lfo.connect(lfoGain);
+      lfo.start();
+
+      notes.forEach(({ freq, gain }, i) => {
+        const osc     = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type           = 'sine';
+        osc.frequency.value = freq + (i % 2 === 0 ? 0.25 : -0.25); // micro-detune for warmth
+        oscGain.gain.value  = gain;
+        lfoGain.connect(oscGain.gain);
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+        osc.start();
+      });
+    }
+
+    return {
+      start() {
+        init();
+        if (ctx.state === 'suspended') ctx.resume();
+        const now = ctx.currentTime;
+        masterGain.gain.cancelScheduledValues(now);
+        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+        masterGain.gain.linearRampToValueAtTime(TARGET, now + FADE);
+      },
+      stop() {
+        if (!masterGain) return;
+        const now = ctx.currentTime;
+        masterGain.gain.cancelScheduledValues(now);
+        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+        masterGain.gain.linearRampToValueAtTime(0, now + FADE);
+      }
+    };
+  })();
 
   // ── Stars background ───────────────────────────────────
   (function () {
@@ -412,6 +491,12 @@
   }
   function clearChips() {
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  }
+  function pickTheme(el) {
+    const already = el.classList.contains('selected');
+    document.querySelectorAll('#theme-chips .chip').forEach(c => c.classList.remove('selected'));
+    if (!already) { el.classList.add('selected'); selectedLesson = el.dataset.val; }
+    else           { selectedLesson = null; }
   }
   function pickVoice(el) {
     document.querySelectorAll('.voice-btn').forEach(v => v.classList.remove('selected'));
@@ -456,7 +541,7 @@
       const res = await fetch('/.netlify/functions/generate-story', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme })
+        body: JSON.stringify({ theme, lesson: selectedLesson })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Story generation failed');
@@ -486,6 +571,7 @@
       player.pause();
       playing = false;
       document.getElementById('btn-play').textContent = '▶️ Resume';
+      Music.stop();
       return;
     }
 
@@ -493,6 +579,7 @@
       player.play();
       playing = true;
       document.getElementById('btn-play').textContent = '⏸ Pause';
+      Music.start();
       return;
     }
 
@@ -530,10 +617,12 @@
         playing = false;
         document.getElementById('btn-play').textContent = '🔊 Play Again';
         audioUrl = null;
+        Music.stop();
       };
 
       player.play();
       playing = true;
+      Music.start();
 
       document.getElementById('loading').classList.remove('show');
       document.getElementById('story-card').style.opacity = '1';
@@ -563,6 +652,9 @@
     const player = document.getElementById('player');
     player.pause(); player.src = '';
     audioUrl = null; playing = false; currentStory = '';
+    Music.stop();
+    document.querySelectorAll('#theme-chips .chip').forEach(c => c.classList.remove('selected'));
+    selectedLesson = null;
     document.getElementById('story-card').classList.remove('show');
     document.getElementById('progress-wrap').classList.remove('show');
     document.getElementById('progress-fill').style.width = '0%';
