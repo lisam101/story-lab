@@ -334,6 +334,33 @@
       transition: color 0.2s; flex-shrink: 0;
     }
     .btn-del:active { color: rgba(239,68,68,0.7); }
+
+    /* ── Music picker ── */
+    .music-row {
+      display: flex; gap: 8px;
+      overflow-x: auto; padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .music-row::-webkit-scrollbar { display: none; }
+    .music-chip {
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 10px 13px;
+      text-align: center; cursor: pointer;
+      transition: all 0.15s ease; min-width: 76px;
+    }
+    .music-chip .mc-icon  { font-size: 22px; display: block; margin-bottom: 4px; }
+    .music-chip .mc-label { font-size: 11px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+    .music-chip.selected  { background: rgba(124,58,237,0.25); border-color: #7c3aed; }
+    .music-chip.selected .mc-label { color: #c4b5fd; }
+    .music-chip:active    { transform: scale(0.95); }
+    .btn-mute {
+      background: none; border: none;
+      font-size: 18px; cursor: pointer;
+      padding: 0; line-height: 1; opacity: 0.65; transition: opacity 0.2s;
+    }
+    .btn-mute:active { opacity: 0.35; }
   </style>
 </head>
 <body>
@@ -385,6 +412,31 @@
         <div class="voice-btn" data-voice="dad"     onclick="pickVoice(this)"><span class="v-emoji">👨</span><div class="v-name">Dad</div><div class="v-sub">Daddy's voice</div></div>
         <div class="voice-btn" data-voice="grandma" onclick="pickVoice(this)"><span class="v-emoji">👵</span><div class="v-name">Grandma</div><div class="v-sub">Grandma's voice</div></div>
         <div class="voice-btn" data-voice="grandpa" onclick="pickVoice(this)"><span class="v-emoji">👴</span><div class="v-name">Grandpa</div><div class="v-sub">Grandpa's voice</div></div>
+      </div>
+    </div>
+
+    <!-- Music picker card -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-label" style="margin-bottom:0;">Background Music</div>
+        <button class="btn-mute" id="btn-mute" onclick="Music.toggleMute()" title="Mute / unmute">🔊</button>
+      </div>
+      <div class="music-row">
+        <div class="music-chip" data-track="gentle-baby-sleep" onclick="Music.setTrack(this.dataset.track)">
+          <span class="mc-icon">😴</span><span class="mc-label">Gentle Sleep</span>
+        </div>
+        <div class="music-chip" data-track="lullaby-baby-sleep" onclick="Music.setTrack(this.dataset.track)">
+          <span class="mc-icon">🎵</span><span class="mc-label">Baby Lullaby</span>
+        </div>
+        <div class="music-chip" data-track="lullaby-kids-sleep" onclick="Music.setTrack(this.dataset.track)">
+          <span class="mc-icon">🌙</span><span class="mc-label">Kids Lullaby</span>
+        </div>
+        <div class="music-chip" data-track="rainforest" onclick="Music.setTrack(this.dataset.track)">
+          <span class="mc-icon">🌿</span><span class="mc-label">Rainforest</span>
+        </div>
+        <div class="music-chip" data-track="space" onclick="Music.setTrack(this.dataset.track)">
+          <span class="mc-icon">🪐</span><span class="mc-label">Space</span>
+        </div>
       </div>
     </div>
 
@@ -480,6 +532,7 @@
 </div>
 
 <audio id="player"></audio>
+<audio id="music-player" loop></audio>
 
 <script>
   // ── State ──────────────────────────────────────────────
@@ -500,44 +553,86 @@
   function voiceEmoji(v) { return VOICE_EMOJI[v] || '🔊'; }
   function capFirst(s)   { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
-  // ── Ambient music (Web Audio) ──────────────────────────
+  // ── Background music (MP3 tracks) ─────────────────────
   const Music = (() => {
-    let ctx = null, masterGain = null;
-    const TARGET = 0.20, FADE = 2.5;
-    const notes = [
-      { freq: 110.00, gain: 0.14 }, { freq: 164.81, gain: 0.11 },
-      { freq: 220.00, gain: 0.09 }, { freq: 277.18, gain: 0.07 },
-      { freq: 329.63, gain: 0.06 }, { freq: 440.00, gain: 0.04 },
+    const TRACKS = [
+      { id: 'gentle-baby-sleep',  file: 'Gentle Baby Sleep.mp3'        },
+      { id: 'lullaby-baby-sleep', file: 'Lullaby Baby Sleep.mp3'       },
+      { id: 'lullaby-kids-sleep', file: 'Lullaby Kids Sleep.mp3'       },
+      { id: 'rainforest',         file: 'Rainforest Ambiance Music.mp3'},
+      { id: 'space',              file: 'Space Ambient Music.mp3'      },
     ];
-    function init() {
+    const TARGET = 0.20, FADE = 2.0;
+    let ctx = null, gainNode = null, musicEl = null, currentSrc = null;
+    let isPlaying = false, muted = false, selectedTrack = TRACKS[0].id;
+    let stopTimer = null;
+
+    function ensureCtx() {
       if (ctx) return;
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
-      masterGain = ctx.createGain(); masterGain.gain.value = 0;
-      masterGain.connect(ctx.destination);
-      const lfo = ctx.createOscillator(), lfoGain = ctx.createGain();
-      lfo.frequency.value = 0.08; lfoGain.gain.value = 0.012;
-      lfo.connect(lfoGain); lfo.start();
-      notes.forEach(({ freq, gain }, i) => {
-        const osc = ctx.createOscillator(), oscGain = ctx.createGain();
-        osc.type = 'sine'; osc.frequency.value = freq + (i % 2 === 0 ? 0.25 : -0.25);
-        oscGain.gain.value = gain; lfoGain.connect(oscGain.gain);
-        osc.connect(oscGain); oscGain.connect(masterGain); osc.start();
-      });
+      ctx      = new (window.AudioContext || window.webkitAudioContext)();
+      gainNode = ctx.createGain(); gainNode.gain.value = 0;
+      gainNode.connect(ctx.destination);
+      musicEl  = document.getElementById('music-player');
+      ctx.createMediaElementSource(musicEl).connect(gainNode);
     }
+    function fadeUp() {
+      clearTimeout(stopTimer);
+      const now = ctx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+      gainNode.gain.linearRampToValueAtTime(TARGET, now + FADE);
+    }
+    function fadeDown(thenPause) {
+      clearTimeout(stopTimer);
+      const now = ctx.currentTime;
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + FADE);
+      if (thenPause) stopTimer = setTimeout(() => musicEl && musicEl.pause(), FADE * 1000 + 100);
+    }
+
     return {
       start() {
-        init(); if (ctx.state === 'suspended') ctx.resume();
-        const now = ctx.currentTime;
-        masterGain.gain.cancelScheduledValues(now);
-        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-        masterGain.gain.linearRampToValueAtTime(TARGET, now + FADE);
+        isPlaying = true;
+        if (muted || !selectedTrack) return;
+        ensureCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        const track = TRACKS.find(t => t.id === selectedTrack);
+        if (!track) return;
+        const src = '/music/' + encodeURIComponent(track.file);
+        if (currentSrc !== src) {
+          gainNode.gain.cancelScheduledValues(ctx.currentTime);
+          gainNode.gain.setValueAtTime(0, ctx.currentTime);
+          musicEl.src = src; musicEl.load(); currentSrc = src;
+        }
+        musicEl.play().catch(() => {});
+        fadeUp();
       },
       stop() {
-        if (!masterGain) return;
-        const now = ctx.currentTime;
-        masterGain.gain.cancelScheduledValues(now);
-        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-        masterGain.gain.linearRampToValueAtTime(0, now + FADE);
+        isPlaying = false;
+        if (!gainNode) return;
+        fadeDown(true);
+      },
+      setTrack(id) {
+        selectedTrack = id;
+        localStorage.setItem('storyLabMusic', id);
+        document.querySelectorAll('.music-chip').forEach(c =>
+          c.classList.toggle('selected', c.dataset.track === id));
+        if (isPlaying && !muted) this.start();  // live-switch if a story is playing
+      },
+      toggleMute() {
+        muted = !muted;
+        localStorage.setItem('storyLabMusicMuted', muted);
+        document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+        if (muted)          { if (gainNode) fadeDown(true); }
+        else if (isPlaying) { this.start(); }
+      },
+      loadPrefs() {
+        const saved      = localStorage.getItem('storyLabMusic') || TRACKS[0].id;
+        const savedMuted = localStorage.getItem('storyLabMusicMuted') === 'true';
+        muted = savedMuted;
+        document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
+        this.setTrack(saved);
       }
     };
   })();
@@ -899,6 +994,9 @@
     if (!player.duration) return;
     player.currentTime = (e.offsetX / document.getElementById('progress-bar').clientWidth) * player.duration;
   }
+
+  // ── Load music prefs on startup ───────────────────────
+  Music.loadPrefs();
 
   // ── Reset ──────────────────────────────────────────────
   function reset() {
