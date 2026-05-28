@@ -13,73 +13,80 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: linear-gradient(160deg, #0d0b1e 0%, #1a1040 50%, #0d1b2e 100%);
-      min-height: 100vh;
-      min-height: 100dvh;
+      min-height: 100vh; min-height: 100dvh;
       color: white;
     }
 
     .app {
       max-width: 430px;
       margin: 0 auto;
-      padding: 0 16px 40px;
+      padding: 0 16px;
       padding-top: max(20px, env(safe-area-inset-top));
-      padding-bottom: max(40px, env(safe-area-inset-bottom));
+      padding-bottom: max(96px, calc(64px + env(safe-area-inset-bottom)));
     }
 
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      padding: 24px 0 30px;
+    /* ── Screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      position: fixed;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: rgba(10,8,24,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 100;
     }
+    .tab-btn {
+      flex: 1;
+      background: none; border: none;
+      color: rgba(255,255,255,0.35);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 0 0; gap: 4px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.3px; text-transform: uppercase;
+      cursor: pointer; transition: color 0.2s;
+    }
+    .tab-btn .tab-icon { font-size: 22px; }
+    .tab-btn.active { color: #c4b5fd; }
+
+    /* ── Header ── */
+    .header { text-align: center; padding: 24px 0 30px; }
     .header-icon { font-size: 44px; line-height: 1; }
     .header h1 {
-      font-size: 30px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      margin-top: 8px;
+      font-size: 30px; font-weight: 800; letter-spacing: -0.8px; margin-top: 8px;
       background: linear-gradient(135deg, #c4b5fd, #818cf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .header p {
-      font-size: 14px;
-      color: rgba(255,255,255,0.45);
-      margin-top: 5px;
-    }
+    .header p { font-size: 14px; color: rgba(255,255,255,0.45); margin-top: 5px; }
 
     /* ── Cards ── */
     .card {
       background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 22px;
-      padding: 20px;
-      margin-bottom: 14px;
+      border-radius: 22px; padding: 20px; margin-bottom: 14px;
     }
     .card-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 14px;
     }
 
-    /* ── Character chips ── */
+    /* ── Chips ── */
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .chip {
       background: rgba(255,255,255,0.08);
       border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 100px;
-      padding: 9px 15px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
+      border-radius: 100px; padding: 9px 15px;
+      font-size: 14px; cursor: pointer;
+      transition: all 0.15s ease; user-select: none;
     }
-    .chip.selected {
-      background: rgba(124,58,237,0.4);
-      border-color: #7c3aed;
-    }
+    .chip.selected { background: rgba(124,58,237,0.4); border-color: #7c3aed; }
     .chip:active { transform: scale(0.95); }
 
     /* ── Text input ── */
@@ -87,14 +94,9 @@
       width: 100%;
       background: rgba(255,255,255,0.08);
       border: 1.5px solid rgba(255,255,255,0.1);
-      border-radius: 14px;
-      padding: 13px 15px;
-      font-size: 16px;
-      color: white;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s;
-      -webkit-appearance: none;
+      border-radius: 14px; padding: 13px 15px;
+      font-size: 16px; color: white; font-family: inherit;
+      outline: none; transition: border-color 0.2s; -webkit-appearance: none;
     }
     .text-input:focus { border-color: rgba(124,58,237,0.7); }
     .text-input::placeholder { color: rgba(255,255,255,0.25); }
@@ -104,67 +106,42 @@
     .voice-btn {
       background: rgba(255,255,255,0.06);
       border: 2px solid rgba(255,255,255,0.1);
-      border-radius: 18px;
-      padding: 16px 10px 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s ease;
+      border-radius: 18px; padding: 16px 10px 14px;
+      text-align: center; cursor: pointer; transition: all 0.15s ease;
     }
     .voice-btn .v-emoji { font-size: 30px; display: block; margin-bottom: 6px; }
-    .voice-btn .v-name { font-size: 15px; font-weight: 700; }
-    .voice-btn .v-sub { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
-    .voice-btn.selected {
-      background: rgba(124,58,237,0.25);
-      border-color: #7c3aed;
-    }
-    .voice-btn:active { transform: scale(0.96); }
+    .voice-btn .v-name  { font-size: 15px; font-weight: 700; }
+    .voice-btn .v-sub   { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .voice-btn.selected { background: rgba(124,58,237,0.25); border-color: #7c3aed; }
+    .voice-btn:active   { transform: scale(0.96); }
 
     /* ── Generate button ── */
     .btn-generate {
       width: 100%;
       background: linear-gradient(135deg, #6d28d9, #8b5cf6);
-      border: none;
-      border-radius: 20px;
-      padding: 20px;
-      font-size: 18px;
-      font-weight: 800;
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: -0.3px;
-      margin-top: 4px;
+      border: none; border-radius: 20px; padding: 20px;
+      font-size: 18px; font-weight: 800; color: white; cursor: pointer;
+      transition: all 0.2s; letter-spacing: -0.3px; margin-top: 4px;
       box-shadow: 0 8px 32px rgba(109,40,217,0.45);
     }
-    .btn-generate:active { transform: scale(0.98); box-shadow: 0 4px 16px rgba(109,40,217,0.3); }
+    .btn-generate:active   { transform: scale(0.98); box-shadow: 0 4px 16px rgba(109,40,217,0.3); }
     .btn-generate:disabled { opacity: 0.45; transform: none; box-shadow: none; cursor: not-allowed; }
 
     /* ── Error ── */
     .error-box {
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 14px;
-      padding: 13px 16px;
-      font-size: 14px;
-      color: #fca5a5;
-      margin-top: 12px;
-      display: none;
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 14px; padding: 13px 16px; font-size: 14px;
+      color: #fca5a5; margin-top: 12px; display: none;
     }
     .error-box.show { display: block; }
 
     /* ── Loading ── */
-    .loading-box {
-      text-align: center;
-      padding: 36px 0 28px;
-      display: none;
-    }
+    .loading-box { text-align: center; padding: 36px 0 28px; display: none; }
     .loading-box.show { display: block; }
     .spinner {
       width: 46px; height: 46px;
-      border: 3px solid rgba(255,255,255,0.12);
-      border-top-color: #8b5cf6;
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-      margin: 0 auto 16px;
+      border: 3px solid rgba(255,255,255,0.12); border-top-color: #8b5cf6;
+      border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-msg { font-size: 15px; color: rgba(255,255,255,0.5); }
@@ -173,223 +150,333 @@
     /* ── Story section ── */
     .story-card { display: none; }
     .story-card.show { display: block; }
-
-    .story-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
+    .story-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
     .story-header .star { font-size: 22px; }
-    .story-header h2 { font-size: 17px; font-weight: 700; color: #c4b5fd; }
-
+    .story-header h2 { font-size: 17px; font-weight: 700; color: #c4b5fd; flex: 1; }
     .story-body {
-      font-size: 15px;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.75);
-      max-height: 260px;
-      overflow-y: auto;
-      padding-right: 4px;
+      font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.75);
+      max-height: 260px; overflow-y: auto; padding-right: 4px;
     }
     .story-body::-webkit-scrollbar { width: 3px; }
     .story-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
 
-    /* ── Action buttons ── */
-    .action-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-    }
+    /* ── Action row ── */
+    .action-row { display: flex; gap: 10px; margin-top: 16px; }
     .btn-play {
       flex: 1;
       background: linear-gradient(135deg, #065f46, #059669);
-      border: none;
-      border-radius: 16px;
-      padding: 18px 12px;
-      font-size: 16px;
-      font-weight: 700;
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 6px 24px rgba(5,150,105,0.35);
+      border: none; border-radius: 16px; padding: 18px 12px;
+      font-size: 16px; font-weight: 700; color: white; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 6px 24px rgba(5,150,105,0.35);
     }
     .btn-play:active { transform: scale(0.97); }
     .btn-play:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
-    .btn-reset {
+    .btn-icon {
       background: rgba(255,255,255,0.08);
       border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 18px 18px;
-      font-size: 18px;
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s;
+      border-radius: 16px; padding: 18px 15px;
+      font-size: 18px; color: white; cursor: pointer;
+      transition: all 0.2s; line-height: 1;
     }
-    .btn-reset:active { transform: scale(0.97); }
+    .btn-icon:active { transform: scale(0.97); }
+    .btn-icon.saved { border-color: #f472b6; background: rgba(244,114,182,0.15); }
 
     /* ── Progress bar ── */
     .progress-wrap { margin-top: 14px; display: none; }
     .progress-wrap.show { display: block; }
     .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 8px;
-      cursor: pointer;
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.1); border-radius: 4px;
+      overflow: hidden; margin-bottom: 8px; cursor: pointer;
     }
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #6d28d9, #8b5cf6);
-      border-radius: 4px;
-      transition: width 0.4s linear;
-      width: 0%;
+      border-radius: 4px; transition: width 0.4s linear; width: 0%;
     }
-    .progress-times {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: rgba(255,255,255,0.3);
-    }
+    .progress-times { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.3); }
 
-    /* ── Stars decoration ── */
-    .stars {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-    .star-dot {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      opacity: 0;
-      animation: twinkle var(--d) ease-in-out infinite var(--delay);
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: 0; }
-      50% { opacity: var(--op); }
-    }
-
+    /* ── Stars ── */
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+    .star-dot { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--d) ease-in-out infinite var(--delay); }
+    @keyframes twinkle { 0%,100% { opacity: 0; } 50% { opacity: var(--op); } }
     .app { position: relative; z-index: 1; }
+
+    /* ── Save modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal-sheet {
+      background: #160e36;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 28px 28px 0 0;
+      padding: 24px 20px;
+      padding-bottom: max(32px, env(safe-area-inset-bottom));
+      width: 100%; max-width: 430px; max-height: 70vh; overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.9);
+      margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-close {
+      background: none; border: none; color: rgba(255,255,255,0.4);
+      font-size: 24px; cursor: pointer; padding: 0; line-height: 1;
+    }
+    .playlist-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer; font-size: 15px; color: rgba(255,255,255,0.85); transition: opacity 0.15s;
+    }
+    .playlist-option:active { opacity: 0.6; }
+    .playlist-option .pl-emoji { font-size: 22px; }
+    .new-pl-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+    .new-pl-input {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 11px 13px;
+      font-size: 15px; color: white; font-family: inherit;
+      outline: none; -webkit-appearance: none;
+    }
+    .new-pl-input:focus { border-color: rgba(124,58,237,0.7); }
+    .new-pl-input::placeholder { color: rgba(255,255,255,0.25); }
+    .btn-create-pl {
+      background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+      border: none; border-radius: 12px; padding: 11px 16px;
+      font-size: 14px; font-weight: 700; color: white; cursor: pointer; white-space: nowrap;
+    }
+    .btn-create-pl:active { opacity: 0.8; }
+
+    /* ── Playlists screen ── */
+    .screen-header {
+      padding: 24px 0 20px;
+      font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #c4b5fd, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .playlist-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 18px 20px; margin-bottom: 12px;
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .playlist-card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
+    .playlist-card .pl-icon { font-size: 32px; line-height: 1; }
+    .playlist-card .pl-info { flex: 1; min-width: 0; }
+    .playlist-card .pl-name { font-size: 16px; font-weight: 700; }
+    .playlist-card .pl-meta { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+    .pl-arrow { color: rgba(255,255,255,0.3); font-size: 20px; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.35); }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state p { font-size: 15px; line-height: 1.7; }
+
+    /* ── Playlist detail screen ── */
+    .back-btn {
+      background: none; border: none; color: #a78bfa;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      padding: 0; margin: 16px 0 12px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .back-btn:active { opacity: 0.7; }
+    .detail-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 16px; }
+
+    .btn-play-all {
+      width: 100%;
+      background: linear-gradient(135deg, #065f46, #059669);
+      border: none; border-radius: 18px; padding: 18px;
+      font-size: 16px; font-weight: 700; color: white; cursor: pointer;
+      margin-bottom: 20px; box-shadow: 0 6px 24px rgba(5,150,105,0.3); transition: all 0.2s;
+    }
+    .btn-play-all:active { transform: scale(0.98); }
+    .btn-play-all:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Now playing banner ── */
+    .now-playing-wrap {
+      background: rgba(109,40,217,0.2);
+      border: 1px solid rgba(109,40,217,0.5);
+      border-radius: 18px; padding: 16px 18px; margin-bottom: 16px; display: none;
+    }
+    .now-playing-wrap.show { display: block; }
+    .np-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #a78bfa; margin-bottom: 5px; }
+    .np-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .np-controls { display: flex; gap: 8px; }
+    .btn-np {
+      flex: 1; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 10px;
+      font-size: 13px; font-weight: 600; color: white; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-np:active { opacity: 0.7; }
+    .btn-np.stop-btn { color: #fca5a5; border-color: rgba(239,68,68,0.2); }
+
+    /* ── Story rows in detail ── */
+    .story-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .story-row .sr-emoji { font-size: 22px; flex-shrink: 0; }
+    .story-row .sr-info  { flex: 1; min-width: 0; }
+    .story-row .sr-title {
+      font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9);
+      line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .story-row .sr-meta  { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .story-row.playing-now .sr-title { color: #c4b5fd; }
+    .btn-del {
+      background: none; border: none; color: rgba(255,255,255,0.2);
+      font-size: 20px; cursor: pointer; padding: 4px 6px; line-height: 1;
+      transition: color 0.2s; flex-shrink: 0;
+    }
+    .btn-del:active { color: rgba(239,68,68,0.7); }
   </style>
 </head>
 <body>
 
-<!-- Twinkling stars background -->
 <div class="stars" id="stars"></div>
 
 <div class="app">
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-icon">🌙</div>
-    <h1>Story Lab</h1>
-    <p>Bedtime stories in your family's voices</p>
-  </div>
+  <!-- ══ Screen: Create ══ -->
+  <div id="screen-create" class="screen active">
 
-  <!-- Character card -->
-  <div class="card" id="form-section">
-    <div class="card-label">Tonight's Story Is About…</div>
-    <div class="chips" id="chips">
-      <div class="chip" data-val="Baby Blue Dinosaur" onclick="pickChip(this)">🦕 Baby Blue Dino</div>
-      <div class="chip" data-val="Captain Enzo" onclick="pickChip(this)">🚀 Captain Enzo</div>
-      <div class="chip" data-val="Magic Train" onclick="pickChip(this)">🚂 Magic Train</div>
-      <div class="chip" data-val="Sleepy Cloud named Nimbus" onclick="pickChip(this)">☁️ Sleepy Cloud</div>
-      <div class="chip" data-val="a friendly dragon" onclick="pickChip(this)">🐉 Friendly Dragon</div>
+    <div class="header">
+      <div class="header-icon">🌙</div>
+      <h1>Story Lab</h1>
+      <p>Bedtime stories in your family's voices</p>
     </div>
-    <input
-      type="text"
-      class="text-input"
-      id="custom-input"
-      placeholder="Or type your own idea…"
-      oninput="clearChips()"
-    >
-  </div>
 
-  <!-- Theme card -->
-  <div class="card">
-    <div class="card-label">Story Theme <span style="font-weight:400;color:rgba(255,255,255,0.25);text-transform:none;letter-spacing:0;">— optional</span></div>
-    <div class="chips" id="theme-chips">
-      <div class="chip" data-val="Sharing" onclick="pickTheme(this)">🤝 Sharing</div>
-      <div class="chip" data-val="Trying Something New" onclick="pickTheme(this)">🌟 Trying Something New</div>
-      <div class="chip" data-val="Adventure" onclick="pickTheme(this)">🗺️ Adventure</div>
-      <div class="chip" data-val="Problem-Solving" onclick="pickTheme(this)">🧩 Problem-Solving</div>
-      <div class="chip" data-val="Kindness" onclick="pickTheme(this)">💛 Kindness</div>
-      <div class="chip" data-val="Dealing with Disappointment" onclick="pickTheme(this)">🌈 Disappointment</div>
-      <div class="chip" data-val="Being Brave" onclick="pickTheme(this)">🦁 Being Brave</div>
-      <div class="chip" data-val="No Hitting" onclick="pickTheme(this)">✋ No Hitting</div>
+    <div class="card" id="form-section">
+      <div class="card-label">Tonight's Story Is About…</div>
+      <div class="chips" id="chips">
+        <div class="chip" data-val="Baby Blue Dinosaur"       onclick="pickChip(this)">🦕 Baby Blue Dino</div>
+        <div class="chip" data-val="Captain Enzo"             onclick="pickChip(this)">🚀 Captain Enzo</div>
+        <div class="chip" data-val="Magic Train"              onclick="pickChip(this)">🚂 Magic Train</div>
+        <div class="chip" data-val="Sleepy Cloud named Nimbus" onclick="pickChip(this)">☁️ Sleepy Cloud</div>
+        <div class="chip" data-val="a friendly dragon"        onclick="pickChip(this)">🐉 Friendly Dragon</div>
+      </div>
+      <input type="text" class="text-input" id="custom-input"
+        placeholder="Or type your own idea…" oninput="clearChips()">
     </div>
-  </div>
 
-  <!-- Voice card -->
-  <div class="card">
-    <div class="card-label">Read By</div>
-    <div class="voice-grid">
-      <div class="voice-btn" data-voice="mom" onclick="pickVoice(this)">
-        <span class="v-emoji">👩</span>
-        <div class="v-name">Mom</div>
-        <div class="v-sub">Your voice</div>
-      </div>
-      <div class="voice-btn" data-voice="dad" onclick="pickVoice(this)">
-        <span class="v-emoji">👨</span>
-        <div class="v-name">Dad</div>
-        <div class="v-sub">Daddy's voice</div>
-      </div>
-      <div class="voice-btn" data-voice="grandma" onclick="pickVoice(this)">
-        <span class="v-emoji">👵</span>
-        <div class="v-name">Grandma</div>
-        <div class="v-sub">Grandma's voice</div>
-      </div>
-      <div class="voice-btn" data-voice="grandpa" onclick="pickVoice(this)">
-        <span class="v-emoji">👴</span>
-        <div class="v-name">Grandpa</div>
-        <div class="v-sub">Grandpa's voice</div>
+    <div class="card">
+      <div class="card-label">Story Theme <span style="font-weight:400;color:rgba(255,255,255,0.25);text-transform:none;letter-spacing:0;">— optional</span></div>
+      <div class="chips" id="theme-chips">
+        <div class="chip" data-val="Sharing"                    onclick="pickTheme(this)">🤝 Sharing</div>
+        <div class="chip" data-val="Trying Something New"       onclick="pickTheme(this)">🌟 Trying Something New</div>
+        <div class="chip" data-val="Adventure"                  onclick="pickTheme(this)">🗺️ Adventure</div>
+        <div class="chip" data-val="Problem-Solving"            onclick="pickTheme(this)">🧩 Problem-Solving</div>
+        <div class="chip" data-val="Kindness"                   onclick="pickTheme(this)">💛 Kindness</div>
+        <div class="chip" data-val="Dealing with Disappointment" onclick="pickTheme(this)">🌈 Disappointment</div>
+        <div class="chip" data-val="Being Brave"                onclick="pickTheme(this)">🦁 Being Brave</div>
+        <div class="chip" data-val="No Hitting"                 onclick="pickTheme(this)">✋ No Hitting</div>
       </div>
     </div>
+
+    <div class="card">
+      <div class="card-label">Read By</div>
+      <div class="voice-grid">
+        <div class="voice-btn" data-voice="mom"     onclick="pickVoice(this)"><span class="v-emoji">👩</span><div class="v-name">Mom</div><div class="v-sub">Your voice</div></div>
+        <div class="voice-btn" data-voice="dad"     onclick="pickVoice(this)"><span class="v-emoji">👨</span><div class="v-name">Dad</div><div class="v-sub">Daddy's voice</div></div>
+        <div class="voice-btn" data-voice="grandma" onclick="pickVoice(this)"><span class="v-emoji">👵</span><div class="v-name">Grandma</div><div class="v-sub">Grandma's voice</div></div>
+        <div class="voice-btn" data-voice="grandpa" onclick="pickVoice(this)"><span class="v-emoji">👴</span><div class="v-name">Grandpa</div><div class="v-sub">Grandpa's voice</div></div>
+      </div>
+    </div>
+
+    <button class="btn-generate" id="btn-gen" onclick="generate()">✨ Create Tonight's Story</button>
+
+    <div class="error-box" id="err"></div>
+
+    <div class="loading-box" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-msg" id="loading-msg">Writing your story…</div>
+      <div class="loading-sub" id="loading-sub">This takes about 10 seconds</div>
+    </div>
+
+    <div class="card story-card" id="story-card" style="margin-top:14px;">
+      <div class="story-header">
+        <span class="star">✨</span>
+        <h2 id="story-title">Tonight's Story</h2>
+      </div>
+      <div class="story-body" id="story-body"></div>
+      <div class="action-row">
+        <button class="btn-play" id="btn-play" onclick="handlePlay()">🔊 Read to Me</button>
+        <button class="btn-icon" id="btn-save" onclick="tapSave()" title="Save to playlist">🤍</button>
+        <button class="btn-icon" onclick="reset()" title="Start over">↩</button>
+      </div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar" id="progress-bar" onclick="seek(event)">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-times">
+          <span id="t-cur">0:00</span>
+          <span id="t-tot">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen-create -->
+
+
+  <!-- ══ Screen: Playlists ══ -->
+  <div id="screen-playlists" class="screen">
+    <div class="screen-header">My Playlists</div>
+    <div id="playlists-list"></div>
   </div>
 
-  <!-- Generate button -->
-  <button class="btn-generate" id="btn-gen" onclick="generate()">
-    ✨ Create Tonight's Story
+
+  <!-- ══ Screen: Playlist Detail ══ -->
+  <div id="screen-playlist-detail" class="screen">
+    <button class="back-btn" onclick="showScreen('playlists')">‹ Playlists</button>
+    <div class="detail-title" id="detail-title"></div>
+
+    <div class="now-playing-wrap" id="now-playing-wrap">
+      <div class="np-label">▶ Now Playing</div>
+      <div class="np-title" id="np-title"></div>
+      <div class="np-controls">
+        <button class="btn-np" id="btn-np-pause" onclick="pauseResumePlaylist()">⏸ Pause</button>
+        <button class="btn-np stop-btn" onclick="stopPlaylist()">✕ Stop</button>
+      </div>
+    </div>
+
+    <button class="btn-play-all" id="btn-play-all" onclick="playPlaylist()">▶ Play All</button>
+    <div id="detail-story-list"></div>
+  </div>
+
+</div><!-- /app -->
+
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-create"    onclick="showScreen('create')">
+    <span class="tab-icon">🌙</span><span>Create</span>
   </button>
+  <button class="tab-btn"        id="tab-playlists" onclick="showScreen('playlists')">
+    <span class="tab-icon">📚</span><span>Playlists</span>
+  </button>
+</div>
 
-  <!-- Error -->
-  <div class="error-box" id="err"></div>
 
-  <!-- Loading -->
-  <div class="loading-box" id="loading">
-    <div class="spinner"></div>
-    <div class="loading-msg" id="loading-msg">Writing your story…</div>
-    <div class="loading-sub" id="loading-sub">This takes about 10 seconds</div>
-  </div>
-
-  <!-- Story output -->
-  <div class="card story-card" id="story-card" style="margin-top:14px;">
-    <div class="story-header">
-      <span class="star">✨</span>
-      <h2 id="story-title">Tonight's Story</h2>
+<!-- Save-to-playlist modal -->
+<div class="modal-backdrop hidden" id="save-modal" onclick="handleBackdropClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      Save to Playlist
+      <button class="modal-close" onclick="closeSaveModal()">×</button>
     </div>
-    <div class="story-body" id="story-body"></div>
-    <div class="action-row">
-      <button class="btn-play" id="btn-play" onclick="handlePlay()">🔊 Read to Me</button>
-      <button class="btn-reset" onclick="reset()" title="Start over">↩</button>
-    </div>
-    <div class="progress-wrap" id="progress-wrap">
-      <div class="progress-bar" id="progress-bar" onclick="seek(event)">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-      <div class="progress-times">
-        <span id="t-cur">0:00</span>
-        <span id="t-tot">—</span>
-      </div>
+    <div id="playlist-options"></div>
+    <div class="new-pl-row">
+      <input type="text" class="new-pl-input" id="new-pl-input"
+        placeholder="New playlist name…"
+        onkeydown="if(event.key==='Enter') createNewPlaylist()">
+      <button class="btn-create-pl" onclick="createNewPlaylist()">Save</button>
     </div>
   </div>
-
 </div>
 
 <audio id="player"></audio>
@@ -402,54 +489,44 @@
   let audioUrl       = null;
   let playing        = false;
 
+  // ── Playlist queue state ───────────────────────────────
+  let plQueue   = [];
+  let plIndex   = -1;
+  let plPlaying = false;
+  let currentPlaylist = null;
+
+  // ── Voice map ──────────────────────────────────────────
+  const VOICE_EMOJI = { mom: '👩', dad: '👨', grandma: '👵', grandpa: '👴' };
+  function voiceEmoji(v) { return VOICE_EMOJI[v] || '🔊'; }
+  function capFirst(s)   { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
   // ── Ambient music (Web Audio) ──────────────────────────
   const Music = (() => {
     let ctx = null, masterGain = null;
-    const TARGET = 0.20;
-    const FADE   = 2.5;
-
-    // A-major pentatonic: A2 E3 A3 C#4 E4 A4
+    const TARGET = 0.20, FADE = 2.5;
     const notes = [
-      { freq: 110.00, gain: 0.14 },
-      { freq: 164.81, gain: 0.11 },
-      { freq: 220.00, gain: 0.09 },
-      { freq: 277.18, gain: 0.07 },
-      { freq: 329.63, gain: 0.06 },
-      { freq: 440.00, gain: 0.04 },
+      { freq: 110.00, gain: 0.14 }, { freq: 164.81, gain: 0.11 },
+      { freq: 220.00, gain: 0.09 }, { freq: 277.18, gain: 0.07 },
+      { freq: 329.63, gain: 0.06 }, { freq: 440.00, gain: 0.04 },
     ];
-
     function init() {
       if (ctx) return;
       ctx = new (window.AudioContext || window.webkitAudioContext)();
-      masterGain = ctx.createGain();
-      masterGain.gain.value = 0;
+      masterGain = ctx.createGain(); masterGain.gain.value = 0;
       masterGain.connect(ctx.destination);
-
-      // Slow tremolo LFO (0.08 Hz)
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.frequency.value = 0.08;
-      lfoGain.gain.value  = 0.012;
-      lfo.connect(lfoGain);
-      lfo.start();
-
+      const lfo = ctx.createOscillator(), lfoGain = ctx.createGain();
+      lfo.frequency.value = 0.08; lfoGain.gain.value = 0.012;
+      lfo.connect(lfoGain); lfo.start();
       notes.forEach(({ freq, gain }, i) => {
-        const osc     = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        osc.type           = 'sine';
-        osc.frequency.value = freq + (i % 2 === 0 ? 0.25 : -0.25); // micro-detune for warmth
-        oscGain.gain.value  = gain;
-        lfoGain.connect(oscGain.gain);
-        osc.connect(oscGain);
-        oscGain.connect(masterGain);
-        osc.start();
+        const osc = ctx.createOscillator(), oscGain = ctx.createGain();
+        osc.type = 'sine'; osc.frequency.value = freq + (i % 2 === 0 ? 0.25 : -0.25);
+        oscGain.gain.value = gain; lfoGain.connect(oscGain.gain);
+        osc.connect(oscGain); oscGain.connect(masterGain); osc.start();
       });
     }
-
     return {
       start() {
-        init();
-        if (ctx.state === 'suspended') ctx.resume();
+        init(); if (ctx.state === 'suspended') ctx.resume();
         const now = ctx.currentTime;
         masterGain.gain.cancelScheduledValues(now);
         masterGain.gain.setValueAtTime(masterGain.gain.value, now);
@@ -472,25 +549,19 @@
       const d = document.createElement('div');
       d.className = 'star-dot';
       const size = Math.random() * 2.5 + 0.5;
-      d.style.cssText = `
-        width:${size}px; height:${size}px;
-        top:${Math.random()*100}%; left:${Math.random()*100}%;
-        --d:${(Math.random()*4+2).toFixed(1)}s;
-        --delay:-${(Math.random()*6).toFixed(1)}s;
-        --op:${(Math.random()*0.6+0.2).toFixed(2)};
-      `;
+      d.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*4+2).toFixed(1)}s;--delay:-${(Math.random()*6).toFixed(1)}s;--op:${(Math.random()*0.6+0.2).toFixed(2)};`;
       container.appendChild(d);
     }
   })();
 
   // ── UI helpers ─────────────────────────────────────────
   function pickChip(el) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('#chips .chip').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById('custom-input').value = '';
   }
   function clearChips() {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('#chips .chip').forEach(c => c.classList.remove('selected'));
   }
   function pickTheme(el) {
     const already = el.classList.contains('selected');
@@ -500,22 +571,216 @@
   }
   function pickVoice(el) {
     document.querySelectorAll('.voice-btn').forEach(v => v.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedVoice = el.dataset.voice;
+    el.classList.add('selected'); selectedVoice = el.dataset.voice;
   }
   function getTheme() {
-    const chip = document.querySelector('.chip.selected');
+    const chip = document.querySelector('#chips .chip.selected');
     if (chip) return chip.dataset.val;
     return document.getElementById('custom-input').value.trim();
   }
-  function showErr(msg) {
-    const el = document.getElementById('err');
-    el.textContent = msg; el.classList.add('show');
+  function showErr(msg) { const el = document.getElementById('err'); el.textContent = msg; el.classList.add('show'); }
+  function hideErr()    { document.getElementById('err').classList.remove('show'); }
+  function fmtTime(s)   { const m = Math.floor(s/60); return `${m}:${Math.floor(s%60).toString().padStart(2,'0')}`; }
+
+  // ── Screen navigation ──────────────────────────────────
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    const tabName = name === 'playlist-detail' ? 'playlists' : name;
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    if (name === 'playlists') renderPlaylists();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  function hideErr() { document.getElementById('err').classList.remove('show'); }
-  function fmtTime(s) {
-    const m = Math.floor(s / 60);
-    return `${m}:${Math.floor(s % 60).toString().padStart(2,'0')}`;
+
+  // ── Storage ────────────────────────────────────────────
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem('storyLabSaved') || '[]'); } catch { return []; }
+  }
+  function writeSaved(arr) { localStorage.setItem('storyLabSaved', JSON.stringify(arr)); }
+
+  // ── Save / heart ───────────────────────────────────────
+  function isCurrentSaved() {
+    const title = document.getElementById('story-title').textContent;
+    return loadSaved().some(s => s.title === title && s.text === currentStory);
+  }
+  function updateSaveBtn() {
+    const btn = document.getElementById('btn-save');
+    if (!btn) return;
+    if (isCurrentSaved()) { btn.textContent = '❤️'; btn.classList.add('saved'); }
+    else                  { btn.textContent = '🤍'; btn.classList.remove('saved'); }
+  }
+  function tapSave() {
+    if (!currentStory) return;
+    if (isCurrentSaved()) {
+      const title = document.getElementById('story-title').textContent;
+      writeSaved(loadSaved().filter(s => !(s.title === title && s.text === currentStory)));
+      updateSaveBtn(); return;
+    }
+    renderSaveModal();
+    document.getElementById('save-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('new-pl-input').focus(), 300);
+  }
+  function closeSaveModal() {
+    document.getElementById('save-modal').classList.add('hidden');
+    document.getElementById('new-pl-input').value = '';
+  }
+  function handleBackdropClick(e) {
+    if (e.target === document.getElementById('save-modal')) closeSaveModal();
+  }
+  function renderSaveModal() {
+    const playlists = [...new Set(loadSaved().map(s => s.playlist).filter(Boolean))];
+    const list = document.getElementById('playlist-options');
+    list.innerHTML = playlists.length === 0
+      ? `<p style="color:rgba(255,255,255,0.3);font-size:14px;padding:4px 0 8px;">No playlists yet — create one below.</p>`
+      : playlists.map(name =>
+          `<div class="playlist-option" data-pl="${encodeURIComponent(name)}" onclick="saveToPlaylist(decodeURIComponent(this.dataset.pl))">
+            <span class="pl-emoji">📚</span><span>${name}</span>
+          </div>`).join('');
+  }
+  function saveToPlaylist(name) {
+    const title = document.getElementById('story-title').textContent;
+    const arr = loadSaved();
+    arr.push({ id: Date.now(), title, text: currentStory, voice: selectedVoice, playlist: name, savedAt: Date.now() });
+    writeSaved(arr); updateSaveBtn(); closeSaveModal();
+  }
+  function createNewPlaylist() {
+    const name = document.getElementById('new-pl-input').value.trim();
+    if (!name) return;
+    saveToPlaylist(name);
+  }
+
+  // ── Playlists screen ───────────────────────────────────
+  function renderPlaylists() {
+    const saved = loadSaved();
+    const map = {};
+    saved.forEach(s => { if (!s.playlist) return; (map[s.playlist] = map[s.playlist] || []).push(s); });
+    const names = Object.keys(map);
+    const container = document.getElementById('playlists-list');
+    if (names.length === 0) {
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <p>No playlists yet.<br>Generate a story and tap 🤍 to save it.</p>
+      </div>`; return;
+    }
+    container.innerHTML = names.map(name => {
+      const stories = map[name];
+      const n = stories.length;
+      const voices = [...new Set(stories.map(s => voiceEmoji(s.voice)))].join(' ');
+      return `<div class="playlist-card" data-pl="${encodeURIComponent(name)}" onclick="openPlaylist(decodeURIComponent(this.dataset.pl))">
+        <div class="pl-icon">📚</div>
+        <div class="pl-info">
+          <div class="pl-name">${name}</div>
+          <div class="pl-meta">${n} ${n===1?'story':'stories'} · ${voices}</div>
+        </div>
+        <div class="pl-arrow">›</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Playlist detail ────────────────────────────────────
+  function openPlaylist(name) {
+    currentPlaylist = name;
+    renderPlaylistDetail();
+    showScreen('playlist-detail');
+  }
+  function renderPlaylistDetail() {
+    const stories = loadSaved().filter(s => s.playlist === currentPlaylist);
+    document.getElementById('detail-title').textContent = currentPlaylist;
+    const playAllBtn = document.getElementById('btn-play-all');
+    playAllBtn.disabled = plPlaying || stories.length === 0;
+    playAllBtn.textContent = plPlaying ? '▶ Playing…' : '▶ Play All';
+    const list = document.getElementById('detail-story-list');
+    if (stories.length === 0) {
+      list.innerHTML = `<div class="empty-state" style="padding:40px 0;"><p>No stories in this playlist.</p></div>`;
+      return;
+    }
+    list.innerHTML = stories.map(s =>
+      `<div class="story-row${plPlaying && plQueue[plIndex]?.id === s.id ? ' playing-now' : ''}" id="sr-${s.id}">
+        <div class="sr-emoji">${voiceEmoji(s.voice)}</div>
+        <div class="sr-info">
+          <div class="sr-title">${s.title}</div>
+          <div class="sr-meta">${capFirst(s.voice)}'s voice</div>
+        </div>
+        <button class="btn-del" data-id="${s.id}" onclick="deleteStory(Number(this.dataset.id))">×</button>
+      </div>`).join('');
+    // Show / hide now-playing banner
+    if (plPlaying && plIndex >= 0 && plIndex < plQueue.length) {
+      document.getElementById('now-playing-wrap').classList.add('show');
+      document.getElementById('np-title').textContent = plQueue[plIndex].title;
+    }
+  }
+  function deleteStory(id) {
+    if (plPlaying && plQueue.some(s => s.id === id)) stopPlaylist();
+    writeSaved(loadSaved().filter(s => s.id !== id));
+    renderPlaylistDetail();
+  }
+
+  // ── Playlist playback ──────────────────────────────────
+  function playPlaylist() {
+    if (plPlaying) return;
+    plQueue = loadSaved().filter(s => s.playlist === currentPlaylist);
+    if (!plQueue.length) return;
+    plIndex = 0; plPlaying = true;
+    playQueueItem();
+  }
+
+  async function playQueueItem() {
+    if (plIndex >= plQueue.length) { stopPlaylist(); return; }
+    const story = plQueue[plIndex];
+
+    // Update banner
+    document.getElementById('now-playing-wrap').classList.add('show');
+    document.getElementById('np-title').textContent = story.title;
+    document.getElementById('btn-np-pause').textContent = '⏳ Loading…';
+    document.getElementById('btn-play-all').textContent = '⏳ Loading…';
+    document.getElementById('btn-play-all').disabled = true;
+
+    // Highlight row
+    document.querySelectorAll('.story-row').forEach(r => r.classList.remove('playing-now'));
+    const row = document.getElementById('sr-' + story.id);
+    if (row) { row.classList.add('playing-now'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+
+    try {
+      const res  = await fetch('/.netlify/functions/generate-audio', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: story.text, voice: story.voice })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Audio failed');
+
+      const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+      const blob  = new Blob([bytes], { type: 'audio/mpeg' });
+      const url   = URL.createObjectURL(blob);
+
+      const player = document.getElementById('player');
+      audioUrl = null; playing = false;       // clear single-story state
+      player.src = url;
+      player.onended = () => { plIndex++; playQueueItem(); };
+      player.play(); Music.start();
+
+      document.getElementById('btn-play-all').textContent = '▶ Playing…';
+      document.getElementById('btn-np-pause').textContent = '⏸ Pause';
+    } catch {
+      plIndex++; playQueueItem();             // skip broken story, keep going
+    }
+  }
+
+  function pauseResumePlaylist() {
+    const player = document.getElementById('player');
+    const btn    = document.getElementById('btn-np-pause');
+    if (player.paused) { player.play();  Music.start(); btn.textContent = '⏸ Pause';  }
+    else               { player.pause(); Music.stop();  btn.textContent = '▶ Resume'; }
+  }
+
+  function stopPlaylist() {
+    const player = document.getElementById('player');
+    player.pause(); player.src = ''; Music.stop();
+    plPlaying = false; plQueue = []; plIndex = -1;
+    document.getElementById('now-playing-wrap').classList.remove('show');
+    const playAllBtn = document.getElementById('btn-play-all');
+    if (playAllBtn) { playAllBtn.textContent = '▶ Play All'; playAllBtn.disabled = false; }
+    document.querySelectorAll('.story-row').forEach(r => r.classList.remove('playing-now'));
   }
 
   // ── Generate story ─────────────────────────────────────
@@ -525,7 +790,9 @@
     if (!selectedVoice) { showErr('Please choose whose voice should read the story.'); return; }
     hideErr();
 
-    // Reset audio state
+    // Stop any playlist that might be running
+    if (plPlaying) stopPlaylist();
+
     const player = document.getElementById('player');
     player.pause(); player.src = '';
     audioUrl = null; playing = false;
@@ -538,9 +805,8 @@
     document.getElementById('btn-gen').disabled = true;
 
     try {
-      const res = await fetch('/.netlify/functions/generate-story', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res  = await fetch('/.netlify/functions/generate-story', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme, lesson: selectedLesson })
       });
       const data = await res.json();
@@ -551,6 +817,7 @@
       document.getElementById('story-title').textContent = data.title || `${theme} Story`;
       document.getElementById('btn-play').textContent = '🔊 Read to Me';
       document.getElementById('btn-play').disabled = false;
+      updateSaveBtn();
 
       document.getElementById('loading').classList.remove('show');
       document.getElementById('story-card').classList.add('show');
@@ -563,27 +830,21 @@
     }
   }
 
-  // ── Play / pause ───────────────────────────────────────
+  // ── Play / pause (single story) ────────────────────────
   async function handlePlay() {
     const player = document.getElementById('player');
 
     if (playing) {
-      player.pause();
-      playing = false;
+      player.pause(); playing = false;
       document.getElementById('btn-play').textContent = '▶️ Resume';
-      Music.stop();
-      return;
+      Music.stop(); return;
     }
-
     if (audioUrl) {
-      player.play();
-      playing = true;
+      player.play(); playing = true;
       document.getElementById('btn-play').textContent = '⏸ Pause';
-      Music.start();
-      return;
+      Music.start(); return;
     }
 
-    // Generate audio for the first time
     document.getElementById('btn-play').disabled = true;
     document.getElementById('loading-msg').textContent = 'Preparing the audio…';
     document.getElementById('loading-sub').textContent = 'Rendering in the selected voice';
@@ -591,38 +852,32 @@
     document.getElementById('story-card').style.opacity = '0.5';
 
     try {
-      const res = await fetch('/.netlify/functions/generate-audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res  = await fetch('/.netlify/functions/generate-audio', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: currentStory, voice: selectedVoice })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Audio generation failed');
 
-      // Decode base64 → blob → object URL
       const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
-      const blob = new Blob([bytes], { type: 'audio/mpeg' });
-      audioUrl = URL.createObjectURL(blob);
+      const blob  = new Blob([bytes], { type: 'audio/mpeg' });
+      audioUrl    = URL.createObjectURL(blob);
 
       player.src = audioUrl;
-
       player.ontimeupdate = () => {
         if (!player.duration) return;
         const pct = (player.currentTime / player.duration) * 100;
         document.getElementById('progress-fill').style.width = pct + '%';
         document.getElementById('t-cur').textContent = fmtTime(player.currentTime);
-        document.getElementById('t-tot').textContent  = fmtTime(player.duration);
+        document.getElementById('t-tot').textContent = fmtTime(player.duration);
       };
       player.onended = () => {
-        playing = false;
+        playing = false; audioUrl = null;
         document.getElementById('btn-play').textContent = '🔊 Play Again';
-        audioUrl = null;
         Music.stop();
       };
 
-      player.play();
-      playing = true;
-      Music.start();
+      player.play(); playing = true; Music.start();
 
       document.getElementById('loading').classList.remove('show');
       document.getElementById('story-card').style.opacity = '1';
@@ -642,9 +897,7 @@
   function seek(e) {
     const player = document.getElementById('player');
     if (!player.duration) return;
-    const bar = document.getElementById('progress-bar');
-    const pct = e.offsetX / bar.clientWidth;
-    player.currentTime = pct * player.duration;
+    player.currentTime = (e.offsetX / document.getElementById('progress-bar').clientWidth) * player.duration;
   }
 
   // ── Reset ──────────────────────────────────────────────
