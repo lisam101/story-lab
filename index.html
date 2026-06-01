@@ -361,6 +361,30 @@
       padding: 0; line-height: 1; opacity: 0.65; transition: opacity 0.2s;
     }
     .btn-mute:active { opacity: 0.35; }
+
+    /* ── Speed slider ── */
+    .speed-row {
+      display: flex; align-items: center; gap: 10px; margin-top: 10px;
+    }
+    .speed-label {
+      font-size: 12px; color: rgba(255,255,255,0.4);
+      white-space: nowrap; min-width: 80px;
+    }
+    .speed-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 4px; outline: none; cursor: pointer;
+      background: rgba(255,255,255,0.12);
+    }
+    .speed-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #8b5cf6; cursor: pointer;
+      box-shadow: 0 0 6px rgba(139,92,246,0.5);
+    }
+    .speed-slider::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #8b5cf6; border: none; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -468,6 +492,12 @@
         <div class="progress-times">
           <span id="t-cur">0:00</span>
           <span id="t-tot">—</span>
+        </div>
+        <div class="speed-row">
+          <span class="speed-label" id="speed-label">Speed: 0.75x</span>
+          <input type="range" class="speed-slider" id="speed-slider"
+            min="0.5" max="1.0" step="0.05" value="0.75"
+            oninput="setSpeed(this.value)">
         </div>
       </div>
     </div>
@@ -852,6 +882,7 @@
       audioUrl = null; playing = false;       // clear single-story state
       player.src = url;
       player.onended = () => { plIndex++; playQueueItem(); };
+      player.playbackRate = playbackSpeed;
       player.play(); Music.start();
 
       document.getElementById('btn-play-all').textContent = '▶ Playing…';
@@ -972,6 +1003,7 @@
         Music.stop();
       };
 
+      player.playbackRate = playbackSpeed;
       player.play(); playing = true; Music.start();
 
       document.getElementById('loading').classList.remove('show');
@@ -997,6 +1029,18 @@
 
   // ── Load music prefs on startup ───────────────────────
   Music.loadPrefs();
+
+  // ── Playback speed ─────────────────────────────────────
+  let playbackSpeed = parseFloat(localStorage.getItem('storyLabSpeed') || '0.75');
+  document.getElementById('speed-slider').value = playbackSpeed;
+  document.getElementById('speed-label').textContent = `Speed: ${playbackSpeed}x`;
+
+  function setSpeed(val) {
+    playbackSpeed = parseFloat(val);
+    localStorage.setItem('storyLabSpeed', playbackSpeed);
+    document.getElementById('speed-label').textContent = `Speed: ${playbackSpeed}x`;
+    document.getElementById('player').playbackRate = playbackSpeed;
+  }
 
   // ── Reset ──────────────────────────────────────────────
   function reset() {
