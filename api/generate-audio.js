@@ -1,29 +1,24 @@
 function formatForSpeech(text) {
   return text
     .trim()
-    // Ensure double newlines between paragraphs
     .replace(/([.!?]['"]?)\n([^\n])/g, '$1\n\n$2')
-    // Ellipsis after ! mid-story — dramatic pause before the next sentence
-    .replace(/!(\s+)([A-Z“])/g, '!... $2')
-    // Em dash before narrative pivot words within a sentence
+    .replace(/!(\s+)([A-Z"])/g, '!... $2')
     .replace(/\. (Suddenly|But then|And then|Just then|Still|Yet)\b/g, '. — $1')
-    // Ellipsis before wind-down and sleep phrases
     .replace(/\b(finally|at last|drifted off|fell fast asleep|fell asleep|closed (?:his|her|their|both) eyes)\b/gi,
       (m) => `... ${m}`)
-    // Tidy up any doubled spaces or excess blank lines
     .replace(/  +/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method Not Allowed');
   }
 
-  const { text, voice } = JSON.parse(event.body || '{}');
+  const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const { text, voice } = body;
 
-  // Voice name → ElevenLabs Voice ID (set these as env vars in Netlify)
   const voiceIds = {
     mom:     process.env.VOICE_ID_MOM,
     dad:     process.env.VOICE_ID_DAD,
@@ -34,12 +29,9 @@ exports.handler = async (event) => {
   const voiceId = voiceIds[voice];
 
   if (!voiceId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        error: `No voice ID configured for "${voice}". Add VOICE_ID_${voice.toUpperCase()} to your Netlify environment variables.`
-      })
-    };
+    return res.status(400).json({
+      error: `No voice ID configured for "${voice}". Add VOICE_ID_${String(voice).toUpperCase()} to your Vercel environment variables.`
+    });
   }
 
   try {
@@ -54,12 +46,12 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify({
           text: formatForSpeech(text),
-          model_id: 'eleven_turbo_v2_5',   // Better prosody and expressiveness than flash
+          model_id: 'eleven_turbo_v2_5',
           speed: 0.8,
           voice_settings: {
-            stability:        0.45,
-            similarity_boost: 0.85,
-            style:            0.40,
+            stability:         0.45,
+            similarity_boost:  0.85,
+            style:             0.40,
             use_speaker_boost: true
           }
         })
@@ -69,24 +61,14 @@ exports.handler = async (event) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error('ElevenLabs error:', errText);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `ElevenLabs ${response.status}: ${errText}` })
-      };
+      return res.status(500).json({ error: `ElevenLabs ${response.status}: ${errText}` });
     }
 
     const audioBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(audioBuffer).toString('base64');
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audio: base64Audio })
-    };
+    return res.status(200).json({ audio: base64Audio });
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Server error: ' + err.message })
-    };
+    return res.status(500).json({ error: 'Server error: ' + err.message });
   }
 };

@@ -867,7 +867,7 @@
     if (row) { row.classList.add('playing-now'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 
     try {
-      const res  = await fetch('/.netlify/functions/generate-audio', {
+      const res  = await fetch('/api/generate-audio', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: story.text, voice: story.voice })
       });
@@ -931,7 +931,7 @@
     document.getElementById('btn-gen').disabled = true;
 
     try {
-      const res  = await fetch('/.netlify/functions/generate-story', {
+      const res  = await fetch('/api/generate-story', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme, lesson: selectedLesson })
       });
@@ -978,7 +978,7 @@
     document.getElementById('story-card').style.opacity = '0.5';
 
     try {
-      const res  = await fetch('/.netlify/functions/generate-audio', {
+      const res  = await fetch('/api/generate-audio', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: currentStory, voice: selectedVoice })
       });
