@@ -1,3 +1,21 @@
+function formatForSpeech(text) {
+  return text
+    .trim()
+    // Ensure double newlines between paragraphs
+    .replace(/([.!?]['"]?)\n([^\n])/g, '$1\n\n$2')
+    // Ellipsis after ! mid-story — dramatic pause before the next sentence
+    .replace(/!(\s+)([A-Z“])/g, '!... $2')
+    // Em dash before narrative pivot words within a sentence
+    .replace(/\. (Suddenly|But then|And then|Just then|Still|Yet)\b/g, '. — $1')
+    // Ellipsis before wind-down and sleep phrases
+    .replace(/\b(finally|at last|drifted off|fell fast asleep|fell asleep|closed (?:his|her|their|both) eyes)\b/gi,
+      (m) => `... ${m}`)
+    // Tidy up any doubled spaces or excess blank lines
+    .replace(/  +/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -35,7 +53,7 @@ exports.handler = async (event) => {
           'Accept':       'audio/mpeg'
         },
         body: JSON.stringify({
-          text,
+          text: formatForSpeech(text),
           model_id: 'eleven_flash_v2_5',   // Fastest ElevenLabs model — stays well within timeout
           speed: 0.8,
           voice_settings: {
