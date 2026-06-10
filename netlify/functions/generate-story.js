@@ -19,6 +19,8 @@ Requirements:
 - Gentle, calming tone — perfect for drifting off to sleep
 - Simple language a 4-year-old can follow and enjoy
 - One small, easily-resolved adventure or discovery (no scary moments)
+- Include 3–4 short lines of gentle spoken dialogue between characters (e.g. "Goodnight," she said softly) — this helps the story feel alive and gives the narrator's voice natural variety
+- Vary sentence length: mix short punchy sentences with longer flowing ones to create natural rhythm
 - End peacefully with the main character (and ${childName}) feeling cozy, safe, and sleepy
 - Do NOT include a title. Write ONLY the story text itself.
 

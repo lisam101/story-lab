@@ -54,7 +54,7 @@ exports.handler = async (event) => {
         },
         body: JSON.stringify({
           text: formatForSpeech(text),
-          model_id: 'eleven_flash_v2_5',   // Fastest ElevenLabs model — stays well within timeout
+          model_id: 'eleven_turbo_v2_5',   // Better prosody and expressiveness than flash
           speed: 0.8,
           voice_settings: {
             stability:        0.45,
