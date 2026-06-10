@@ -57,9 +57,9 @@ exports.handler = async (event) => {
           model_id: 'eleven_flash_v2_5',   // Fastest ElevenLabs model — stays well within timeout
           speed: 0.8,
           voice_settings: {
-            stability:        0.70,
+            stability:        0.45,
             similarity_boost: 0.85,
-            style:            0.10,
+            style:            0.40,
             use_speaker_boost: true
           }
         })
