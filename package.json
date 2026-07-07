@@ -1,5 +1,8 @@
 {
   "name": "story-lab",
   "version": "1.0.0",
-  "description": "Custom bedtime stories in your family's voices"
+  "description": "Custom bedtime stories in your family's voices",
+  "dependencies": {
+    "@vercel/blob": "^1.1.1"
+  }
 }

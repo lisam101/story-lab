@@ -1,7 +1,9 @@
 {
   "functions": {
     "api/generate-audio.js": { "maxDuration": 60 },
-    "api/generate-story.js": { "maxDuration": 60 }
+    "api/generate-story.js": { "maxDuration": 60 },
+    "api/save-story.js":     { "maxDuration": 60 },
+    "api/alexa.js":          { "maxDuration": 30 }
   },
   "headers": [
     {

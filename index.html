@@ -385,6 +385,20 @@
       width: 18px; height: 18px; border-radius: 50%;
       background: #8b5cf6; border: none; cursor: pointer;
     }
+
+    /* ── Toast ─────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(30, 30, 50, 0.95);
+      color: #fff; font-size: 14px;
+      padding: 10px 18px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 200;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -561,6 +575,8 @@
   </div>
 </div>
 
+<div id="toast"></div>
+
 <audio id="player"></audio>
 <audio id="music-player" loop></audio>
 
@@ -571,6 +587,7 @@
   let currentStory   = '';
   let audioUrl       = null;
   let playing        = false;
+  let lastAudio      = null;   // { url, voice, text } — last audio generated, reused on save/replay
 
   // ── Playlist queue state ───────────────────────────────
   let plQueue   = [];
@@ -765,9 +782,50 @@
   }
   function saveToPlaylist(name) {
     const title = document.getElementById('story-title').textContent;
+    const entry = { id: Date.now(), title, text: currentStory, voice: selectedVoice, playlist: name, savedAt: Date.now() };
     const arr = loadSaved();
-    arr.push({ id: Date.now(), title, text: currentStory, voice: selectedVoice, playlist: name, savedAt: Date.now() });
+    arr.push(entry);
     writeSaved(arr); updateSaveBtn(); closeSaveModal();
+    sendToEcho(entry);
+  }
+
+  // ── Echo library sync (Vercel Blob → Alexa skill) ──────
+  // Uploads the story's mp3 to permanent storage so the Alexa skill can
+  // play it, and remembers the URL so playlists replay without
+  // re-generating audio.
+  async function sendToEcho(entry) {
+    try {
+      let tmpUrl;
+      if (lastAudio && lastAudio.text === entry.text && lastAudio.voice === entry.voice) {
+        tmpUrl = lastAudio.url;
+      } else {
+        const r = await fetch('/api/generate-audio', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: entry.text, voice: entry.voice })
+        });
+        const d = await r.json();
+        if (!r.ok || !d.url) return;   // Blob storage not set up yet — skip quietly
+        tmpUrl = d.url;
+        lastAudio = { url: d.url, voice: entry.voice, text: entry.text };
+      }
+      await saveToEchoLibrary(entry, tmpUrl);
+      toast('✓ Sent to Echo');
+    } catch (e) {
+      console.error('Echo sync failed:', e);
+    }
+  }
+
+  async function saveToEchoLibrary(entry, tmpUrl) {
+    const r = await fetch('/api/save-story', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: entry.id, title: entry.title, voice: entry.voice, tmpUrl })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'save-story failed');
+    const arr = loadSaved();
+    const s = arr.find(x => x.id === entry.id);
+    if (s) { s.audioUrl = d.audioUrl; writeSaved(arr); }
+    return d.audioUrl;
   }
   function createNewPlaylist() {
     const name = document.getElementById('new-pl-input').value.trim();
@@ -838,7 +896,22 @@
   function deleteStory(id) {
     if (plPlaying && plQueue.some(s => s.id === id)) stopPlaylist();
     writeSaved(loadSaved().filter(s => s.id !== id));
+    // Remove from the Echo library too
+    fetch('/api/delete-story', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    }).catch(() => {});
     renderPlaylistDetail();
+  }
+
+  // ── Toast ──────────────────────────────────────────────
+  let toastTimer = null;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
   }
 
   // ── Playlist playback ──────────────────────────────────
@@ -867,16 +940,28 @@
     if (row) { row.classList.add('playing-now'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 
     try {
-      const res  = await fetch('/api/generate-audio', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: story.text, voice: story.voice })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Audio failed');
+      let url;
+      if (story.audioUrl) {
+        // Already in the Echo library — replay for free
+        url = story.audioUrl;
+      } else {
+        const res  = await fetch('/api/generate-audio', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: story.text, voice: story.voice })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Audio failed');
 
-      const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
-      const blob  = new Blob([bytes], { type: 'audio/mpeg' });
-      const url   = URL.createObjectURL(blob);
+        if (data.url) {
+          url = data.url;
+          // Backfill this saved story into the Echo library in the background
+          saveToEchoLibrary(story, data.url).catch(e => console.error('Echo backfill failed:', e));
+        } else {
+          const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+          const blob  = new Blob([bytes], { type: 'audio/mpeg' });
+          url = URL.createObjectURL(blob);
+        }
+      }
 
       const player = document.getElementById('player');
       audioUrl = null; playing = false;       // clear single-story state
@@ -957,6 +1042,21 @@
   }
 
   // ── Play / pause (single story) ────────────────────────
+  function attachSingleStoryHandlers(player) {
+    player.ontimeupdate = () => {
+      if (!player.duration) return;
+      const pct = (player.currentTime / player.duration) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('t-cur').textContent = fmtTime(player.currentTime);
+      document.getElementById('t-tot').textContent = fmtTime(player.duration);
+    };
+    player.onended = () => {
+      playing = false; audioUrl = null;
+      document.getElementById('btn-play').textContent = '🔊 Play Again';
+      Music.stop();
+    };
+  }
+
   async function handlePlay() {
     const player = document.getElementById('player');
 
@@ -968,6 +1068,17 @@
     if (audioUrl) {
       player.play(); playing = true;
       document.getElementById('btn-play').textContent = '⏸ Pause';
+      Music.start(); return;
+    }
+    // Replay without re-generating if we already have this story's audio
+    if (lastAudio && lastAudio.text === currentStory && lastAudio.voice === selectedVoice) {
+      audioUrl = lastAudio.url;
+      player.src = audioUrl;
+      attachSingleStoryHandlers(player);
+      player.playbackRate = playbackSpeed;
+      player.play(); playing = true;
+      document.getElementById('btn-play').textContent = '⏸ Pause';
+      document.getElementById('progress-wrap').classList.add('show');
       Music.start(); return;
     }
 
@@ -985,23 +1096,17 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Audio generation failed');
 
-      const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
-      const blob  = new Blob([bytes], { type: 'audio/mpeg' });
-      audioUrl    = URL.createObjectURL(blob);
+      if (data.url) {
+        audioUrl  = data.url;
+        lastAudio = { url: data.url, voice: selectedVoice, text: currentStory };
+      } else {
+        const bytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+        const blob  = new Blob([bytes], { type: 'audio/mpeg' });
+        audioUrl    = URL.createObjectURL(blob);
+      }
 
       player.src = audioUrl;
-      player.ontimeupdate = () => {
-        if (!player.duration) return;
-        const pct = (player.currentTime / player.duration) * 100;
-        document.getElementById('progress-fill').style.width = pct + '%';
-        document.getElementById('t-cur').textContent = fmtTime(player.currentTime);
-        document.getElementById('t-tot').textContent = fmtTime(player.duration);
-      };
-      player.onended = () => {
-        playing = false; audioUrl = null;
-        document.getElementById('btn-play').textContent = '🔊 Play Again';
-        Music.stop();
-      };
+      attachSingleStoryHandlers(player);
 
       player.playbackRate = playbackSpeed;
       player.play(); playing = true; Music.start();

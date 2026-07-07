@@ -1,3 +1,5 @@
+const { put, list, del } = require('@vercel/blob');
+
 function formatForSpeech(text) {
   return text
     .trim()
@@ -9,6 +11,19 @@ function formatForSpeech(text) {
     .replace(/  +/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+// Freshly generated audio lands in tmp/ until the user saves the story;
+// anything older than a day gets swept out here.
+async function cleanupTmp() {
+  try {
+    const { blobs } = await list({ prefix: 'tmp/' });
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const old = blobs.filter(b => new Date(b.uploadedAt).getTime() < dayAgo).map(b => b.url);
+    if (old.length) await del(old);
+  } catch (e) {
+    console.error('tmp cleanup failed:', e);
+  }
 }
 
 module.exports = async (req, res) => {
@@ -65,8 +80,25 @@ module.exports = async (req, res) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const base64Audio = Buffer.from(audioBuffer).toString('base64');
 
+    // Preferred path: upload to Blob and return a URL (small response,
+    // and saving the story to the Echo library becomes a cheap copy).
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        await cleanupTmp();
+        const blob = await put(`tmp/${Date.now()}.mp3`, Buffer.from(audioBuffer), {
+          access:          'public',
+          contentType:     'audio/mpeg',
+          addRandomSuffix: false
+        });
+        return res.status(200).json({ url: blob.url });
+      } catch (e) {
+        console.error('Blob upload failed, falling back to base64:', e);
+      }
+    }
+
+    // Fallback (Blob store not configured): return audio inline.
+    const base64Audio = Buffer.from(audioBuffer).toString('base64');
     return res.status(200).json({ audio: base64Audio });
   } catch (err) {
     return res.status(500).json({ error: 'Server error: ' + err.message });
