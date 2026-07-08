@@ -392,11 +392,13 @@
       transform: translateX(-50%) translateY(10px);
       background: rgba(30, 30, 50, 0.95);
       color: #fff; font-size: 14px;
-      padding: 10px 18px; border-radius: 20px;
+      padding: 10px 18px; border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.15);
       opacity: 0; pointer-events: none;
       transition: opacity 0.3s, transform 0.3s;
       z-index: 200;
+      max-width: 85vw; text-align: center;
+      white-space: pre-wrap; word-break: break-word;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
@@ -794,6 +796,7 @@
   // play it, and remembers the URL so playlists replay without
   // re-generating audio.
   async function sendToEcho(entry) {
+    toast('Sending to Echo…');
     try {
       let tmpUrl;
       if (lastAudio && lastAudio.text === entry.text && lastAudio.voice === entry.voice) {
@@ -804,14 +807,15 @@
           body: JSON.stringify({ text: entry.text, voice: entry.voice })
         });
         const d = await r.json();
-        if (!r.ok || !d.url) return;   // Blob storage not set up yet — skip quietly
+        if (!r.ok) { toast('✗ Audio step: ' + (d.error || r.status)); return; }
+        if (!d.url) { toast('✗ No Blob URL returned — check BLOB_READ_WRITE_TOKEN in Vercel'); return; }
         tmpUrl = d.url;
         lastAudio = { url: d.url, voice: entry.voice, text: entry.text };
       }
       await saveToEchoLibrary(entry, tmpUrl);
       toast('✓ Sent to Echo');
     } catch (e) {
-      console.error('Echo sync failed:', e);
+      toast('✗ Echo sync failed: ' + e.message);
     }
   }
 
@@ -911,7 +915,8 @@
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    const duration = msg.startsWith('✗') ? 8000 : 2500;
+    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
   }
 
   // ── Playlist playback ──────────────────────────────────
