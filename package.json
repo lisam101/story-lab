@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "Custom bedtime stories in your family's voices",
   "dependencies": {
-    "@vercel/blob": "^1.1.1"
+    "@vercel/blob": "^2.6.0"
   }
 }

@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
   }
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
     return res.status(500).json({ error: 'Blob storage not configured. Add a Blob store to this project in Vercel.' });
   }
 

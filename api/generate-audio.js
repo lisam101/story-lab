@@ -83,7 +83,8 @@ module.exports = async (req, res) => {
 
     // Preferred path: upload to Blob and return a URL (small response,
     // and saving the story to the Echo library becomes a cheap copy).
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    // Blob auth is either a classic token or OIDC (BLOB_STORE_ID + runtime token).
+    if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
       try {
         await cleanupTmp();
         const blob = await put(`tmp/${Date.now()}.mp3`, Buffer.from(audioBuffer), {
