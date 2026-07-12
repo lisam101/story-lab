@@ -84,6 +84,7 @@ module.exports = async (req, res) => {
     // Preferred path: upload to Blob and return a URL (small response,
     // and saving the story to the Echo library becomes a cheap copy).
     // Blob auth is either a classic token or OIDC (BLOB_STORE_ID + runtime token).
+    let blobError = null;
     if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
       try {
         await cleanupTmp();
@@ -95,12 +96,13 @@ module.exports = async (req, res) => {
         return res.status(200).json({ url: blob.url });
       } catch (e) {
         console.error('Blob upload failed, falling back to base64:', e);
+        blobError = e.message;
       }
     }
 
     // Fallback (Blob store not configured): return audio inline.
     const base64Audio = Buffer.from(audioBuffer).toString('base64');
-    return res.status(200).json({ audio: base64Audio });
+    return res.status(200).json({ audio: base64Audio, blobError });
   } catch (err) {
     return res.status(500).json({ error: 'Server error: ' + err.message });
   }
